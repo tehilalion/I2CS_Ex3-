@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 /**
  * This class represents a 2D map as a "screen" or a raster matrix or maze over integers.
  * @author boaz.benmoshe
@@ -75,35 +77,57 @@ public class Map implements Map2D {
 	public int getWidth() {return  map[0].length;}
 
 	@Override
-	/////// add your code below ///////
-	public int getHeight() {return 0;}
+	public int getHeight() { return map.length;}
+
 	@Override
-	/////// add your code below ///////
-	public int getPixel(int x, int y) { return 0;}
+	public int getPixel(int x, int y) {
+        int ans = map[y][x];
+        return ans;}
+
 	@Override
-	/////// add your code below ///////
 	public int getPixel(Pixel2D p) {
-		return this.getPixel(p.getX(),p.getY());
+        int ans = map[p.getY()][p.getX()];
+        return ans;
 	}
+
+    @Override
+	public void setPixel(int x, int y, int v) { map[y][x] = v;}
+
 	@Override
-	/////// add your code below ///////
-	public void setPixel(int x, int y, int v) {;}
-	@Override
-	/////// add your code below ///////
 	public void setPixel(Pixel2D p, int v) {
-		;
+        map[p.getY()][p.getX()] = v;
 	}
+
 	@Override
 	/** 
 	 * Fills this map with the new color (new_v) starting from p.
 	 * https://en.wikipedia.org/wiki/Flood_fill
 	 */
 	public int fill(Pixel2D xy, int new_v) {
-		int ans=0;
-		/////// add your code below ///////
+        int old_v = getPixel(xy);
+        if (old_v == new_v){
+            return 0;}
+        ArrayList<Pixel2D> q= new ArrayList<>();
+        q.add(xy);
+        setPixel(xy, new_v);
+        int count= 0;
+        int [][] dir= {{1,0},{-1,0},{0,1},{0,-1}};
+        while (!q.isEmpty()){
+            Pixel2D c=q.remove(0);
+            setPixel(c,new_v);
+            count++;
+            for (int []step:dir){
+                int nx = c.getX() + step[0];
+                int ny = c.getY() + step[1];
 
-		///////////////////////////////////
-		return ans;
+                if (isInside(nx,ny) && getPixel(nx, ny) == old_v) {
+                    setPixel(nx, ny, new_v);
+                    q.add(new Index2D(nx, ny));
+                }
+
+            }
+        }
+        return count;
 	}
 
 	@Override
@@ -112,16 +136,39 @@ public class Map implements Map2D {
 	 * https://en.wikipedia.org/wiki/Breadth-first_search
 	 */
 	public Pixel2D[] shortestPath(Pixel2D p1, Pixel2D p2, int obsColor) {
-		Pixel2D[] ans = null;  // the result.
-		/////// add your code below ///////
+        Map2D distMap= allDistance(p1,obsColor);
+        int dist = distMap.getPixel(p2.getX(), p2.getY());
+        if (dist == -1) return null;
+        Pixel2D[] shortest = new Pixel2D[dist+1];
+        Pixel2D temp=p2;
+        int[] dx={1,-1,0,0};
+        int[] dy={0,0,1,-1};
+        for (int i=dist; i>=0; i--){
+            shortest[i]= temp;
+            if (i>0) {
+                for (int j = 0; j < dx.length; j++) {
+                    int nX = temp.getX() + dx[j];
+                    int nY = temp.getY() + dy[j];
 
-		///////////////////////////////////
-		return ans;
-	}
+                    if (isInside(nX,nY) && distMap.getPixel(nX, nY) == i - 1) {
+                        temp = new Index2D(nX, nY);
+                        break;
+                    }
+                }
+
+            }
+        }
+        return shortest;
+
+    }
 	@Override
-	/////// add your code below ///////
 	public boolean isInside(Pixel2D p) {
-		return false;
+        boolean ans = false;
+        if (p.getY()>=0 && p.getX()>=0
+                && p.getY()<map.length && p.getX()<map[0].length ){
+            ans = true;
+        }
+        return ans;
 	}
 
 	@Override

@@ -172,13 +172,13 @@ public class Map implements Map2D {
 	}
 
 	@Override
-	/////// add your code below ///////
 	public boolean isCyclic() {
-		return false;
+return this._cyclicFlag;
 	}
 	@Override
-	/////// add your code below ///////
-	public void setCyclic(boolean cy) {;}
+	public void setCyclic(boolean cy) {
+        this._cyclicFlag = cy;}
+
 	@Override
 	/////// add your code below ///////
 	public Map2D allDistance(Pixel2D start, int obsColor) {

@@ -4,7 +4,7 @@
  *
  */
 public class Map implements Map2D {
-	private int[][] _map;
+	private int[][] map;
 	private boolean _cyclicFlag = true;
 	
 	/**
@@ -29,27 +29,51 @@ public class Map implements Map2D {
 	}
 	@Override
 	public void init(int w, int h, int v) {
-		/////// add your code below ///////
-
-		///////////////////////////////////
+        if (w<=0  || h<=0)
+            throw new RuntimeException("Invalid width or height");
+        map= new int [h][w];
+        for (int i=0; i<h; i=i+1) {
+            for (int j=0; j<w; j=j+1) {
+                map[i][j]=v;
+            }
+        }
 	}
 	@Override
 	public void init(int[][] arr) {
-		/////// add your code below ///////
+        if   (arr==null || arr.length==0)
+            throw new RuntimeException("Invalid input array");
+        int h = arr.length;
+        int c= arr[0].length;
+        if (c==0)
+            throw new RuntimeException("Invalid Row Input");
 
-		///////////////////////////////////
+        for (int i=1; i<h; i=i+1) {
+            if (arr[i].length != c)
+                throw new RuntimeException("Ragged array");
+        }
+        map = new int[h][c];
+        for (int y = 0; y < h; y++){
+            for (int x = 0; x < c; x++) {
+                map[y][x] = arr[y][x];
+            }
+        }
 	}
 	@Override
 	public int[][] getMap() {
-		int[][] ans = null;
-		/////// add your code below ///////
-
-		///////////////////////////////////
-		return ans;
+        if (map==null) return null;
+        int h= map.length;
+        int w= map[0].length;
+        int [][]copy= new int [h][w];
+        for (int i=0; i<h; i=i+1) {
+            for (int j=0; j<w; j=j+1) {
+                copy [i][j]= map [i][j];
+            }
+        }
+        return copy;
 	}
 	@Override
-	/////// add your code below ///////
-	public int getWidth() {return 0;}
+	public int getWidth() {return  map[0].length;}
+
 	@Override
 	/////// add your code below ///////
 	public int getHeight() {return 0;}

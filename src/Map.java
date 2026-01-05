@@ -119,10 +119,10 @@ public class Map implements Map2D {
             for (int []step:dir){
                 int nx = c.getX() + step[0];
                 int ny = c.getY() + step[1];
-
-                if (isInside(nx,ny) && getPixel(nx, ny) == old_v) {
-                    setPixel(nx, ny, new_v);
-                    q.add(new Index2D(nx, ny));
+                Pixel2D next= new Index2D(nx, ny);
+                if (isInside(next) && getPixel(nx, ny) == old_v) {
+                    setPixel(next, new_v);
+                    q.add(next);
                 }
 
             }
@@ -149,9 +149,9 @@ public class Map implements Map2D {
                 for (int j = 0; j < dx.length; j++) {
                     int nX = temp.getX() + dx[j];
                     int nY = temp.getY() + dy[j];
-
-                    if (isInside(nX,nY) && distMap.getPixel(nX, nY) == i - 1) {
-                        temp = new Index2D(nX, nY);
+                    Pixel2D next= new Index2D(nX, nY);
+                    if (isInside(next) && distMap.getPixel(nX, nY) == i - 1) {
+                        temp = next;
                         break;
                     }
                 }
@@ -180,12 +180,41 @@ return this._cyclicFlag;
         this._cyclicFlag = cy;}
 
 	@Override
-	/////// add your code below ///////
 	public Map2D allDistance(Pixel2D start, int obsColor) {
-		Map2D ans = null;  // the result.
-		/////// add your code below ///////
+        Map2D distMap = new Map(this.getWidth(), this.getHeight(), -1);
 
-		///////////////////////////////////
-		return ans;
+        if (start == null) {
+            throw new RuntimeException("invalid start");
+        }
+
+        distMap.setPixel(start.getX(), start.getY(), 0);
+
+        ArrayList<Pixel2D> q = new ArrayList<>();
+        q.add(start);
+
+        int[] dx = {1, -1, 0, 0};
+        int[] dy = {0, 0, 1, -1};
+
+        while (!q.isEmpty()) {
+            Pixel2D c = q.remove(0);
+            int currentDis = distMap.getPixel(c.getX(), c.getY());
+
+            for (int i = 0; i < dx.length; i++) {
+                int nX = c.getX() + dx[i];
+                int nY = c.getY() + dy[i];
+
+                Pixel2D next= new Index2D(nX, nY);
+                if (isInside(next)) {
+                    if (this.getPixel(nX, nY) != obsColor &&
+                            distMap.getPixel(nX, nY) == -1) {
+
+                        distMap.setPixel(nX, nY, currentDis + 1);
+                        q.add(next);
+                    }
+                }
+            }
+        }
+
+        return distMap;
 	}
 }

@@ -15,7 +15,7 @@ import exe.ex3.game.PacmanGame;
  * 4. The Game (and the Gamer) parameters are defined in the Info class.
  * 4. Your are asked to implement the following classes: Index2D, Map, Ex3Algo.
  * 5. Keep in mind that in order to implement this assignment - you might want to implement few additional classes (on top of adding JUnit classes).
- * 6. The dame has 5 main "levels" ([0,4]). You are request to run&test them all.
+ * 6. The game has 5 main "levels" ([0,4]). You are request to run&test them all.
  * 7. After each run, the system prints (in the terminal, in red) a String with your game results -
  * you are asked to upload your results (at least one for each level), part of your grade will be based on those results.
  *
@@ -23,9 +23,9 @@ import exe.ex3.game.PacmanGame;
 public class  Ex3Main {
     private static Character _cmd;
     public static void main(String[] args) {
-        play1();
+        play2();
     }
-    public static void play1() {
+    public static void play2() {
     	Game ex3 = new Game();//new Game(level);
     	ex3.init(GameInfo.CASE_SCENARIO, GameInfo.MY_ID, GameInfo.CYCLIC_MODE, GameInfo.RANDOM_SEED, GameInfo.RESOLUTION_NORM, GameInfo.DT, -1);
         PacManAlgo man = GameInfo.ALGO;

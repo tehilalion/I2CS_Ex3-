@@ -15,7 +15,9 @@ public class Ex3Algo implements PacManAlgo{
 	private int _count;
     private Map _map;
 	public Ex3Algo() {_count=0;}
-	@Override
+    private static final int[] DIRECTIONS = {Game.UP, Game.DOWN, Game.LEFT, Game.RIGHT};
+
+    @Override
 	/**
 	 *  Add a short description for the algorithm as a String.
 	 */
@@ -40,13 +42,11 @@ public class Ex3Algo implements PacManAlgo{
 			System.out.println("Pacman coordinate: "+pos);
 			GhostCL[] ghosts = game.getGhosts(code);
 			printGhosts(ghosts);
-			//int up = Game.UP, left = Game.LEFT, down = Game.DOWN, right = Game.RIGHT;
-		}
+
+        }
 		_count++;
-        // יצירת לוח
         int[][] board = game.getGame(0);
         _map= new Map(board);
-
         Index2D pacmanPos = parsePosition(game.getPos(0));
         GhostCL[] ghosts = game.getGhosts(0);
       int blackColour = Game.getIntColor(Color.BLACK,0);
@@ -57,10 +57,26 @@ public class Ex3Algo implements PacManAlgo{
       if(dangerGhost!=null) {
           return escapeFromGhost (pacmanPos,dangerGhost);
       }
+
+        GhostCL eatableGhost = findCloseEatG (pacmanPos, ghosts);
+        if (eatableGhost != null){
+            return chaseGhost (pacmanPos, eatableGhost);
+        }
+
+
+
+
       // no danger? cont rando
 		int dir = randomDir();
 		return dir;
 	}
+
+
+
+
+
+
+
 
 	private static void printBoard(int[][] b) {
 		for(int y =0;y<b[0].length;y++){
@@ -112,11 +128,11 @@ public class Ex3Algo implements PacManAlgo{
     // checks all directions, check the distance between all ghosts, choose the direction with max dist
     private int escapeFromGhost (Index2D pacmanPos, GhostCL dangerGhost) {
         Index2D ghostPos = parsePosition(dangerGhost.getPos(0));
-        int[] directions= {Game.UP, Game.DOWN, Game.LEFT, Game.RIGHT};
+
         int bestDir= Game.STAY;
         double maxDist = -1.0;
-        for(int i=0;i<directions.length;i++){
-            int dir = directions[i];
+        for(int i=0;i<DIRECTIONS.length;i++){
+            int dir = DIRECTIONS[i];
             Index2D nextPos = getNextPosition(pacmanPos, dir);
             double distance = nextPos.distance2D(ghostPos);
             if (distance > maxDist) {
@@ -146,7 +162,41 @@ public class Ex3Algo implements PacManAlgo{
         return new Index2D(x,y);
     }
 
+  private GhostCL findCloseEatG (Index2D pacmanPos, GhostCL[] ghosts) {
+        GhostCL closest = null;
+        double minDist = 4.0;
+        for(int i=0;i<ghosts.length;i++){
+            GhostCL g = ghosts[i];
+            double eatableTime = g.remainTimeAsEatable(0);
+            if  (eatableTime> 20) {
+                Index2D ghostPos = parsePosition(g.getPos(0));
+                double distance = pacmanPos.distance2D(ghostPos);
+                if (distance < minDist) {
+                    minDist = distance;
+                    closest = g;
+                }
+            }
+        }
+        return closest;
+  }
 
+private int chaseGhost (Index2D pacmanPos, GhostCL eatableGhost) {
+        Index2D ghostPos = parsePosition(eatableGhost.getPos(0));
+        int bestDir= Game.STAY;
+        double minDist = 4.0;
+        for(int i=0;i<DIRECTIONS.length;i++){
+            int dir = DIRECTIONS[i];
+            Index2D nextPos = getNextPosition(pacmanPos, dir);
+            double distance = nextPos.distance2D(ghostPos);
+            if (distance < minDist) {
+                minDist = distance;
+                bestDir = dir;
+            }
+        }
+        return bestDir;
+
+
+}
 
 
 

@@ -51,34 +51,30 @@ public class Ex3Algo implements PacManAlgo{
         GhostCL[] ghosts = game.getGhosts(0);
       int blackColour = Game.getIntColor(Color.BLACK,0);
 
-// run from closest ghost
       GhostCL dangerGhost = findCloseDangerG (pacmanPos,ghosts);
-      // found danger, run
-      if(dangerGhost!=null) {
-          return escapeFromGhost (pacmanPos,dangerGhost);
+        GhostCL eatableGhost = findCloseEatG (pacmanPos, ghosts);
+
+        if(dangerGhost!=null && eatableGhost==null) {
+          return escapeFromGhost (pacmanPos,dangerGhost,blackColour);
       }
 
-        GhostCL eatableGhost = findCloseEatG (pacmanPos, ghosts);
         if (eatableGhost != null){
             return chaseGhost (pacmanPos, eatableGhost);
         }
+        Index2D power =findNearPowerUP (pacmanPos,board);
+        if (power != null){
+            return moveTowardTarget (pacmanPos,power);
+        }
 
+        Index2D food= findNearFood (pacmanPos,board);
+        if (food != null){
+            return moveTowardTarget (pacmanPos,food);
+        }
 
-
-
-      // no danger? cont rando
-		int dir = randomDir();
-		return dir;
+        return randomDir(pacmanPos);
 	}
 
-
-
-
-
-
-
-
-	private static void printBoard(int[][] b) {
+    private static void printBoard(int[][] b) {
 		for(int y =0;y<b[0].length;y++){
 			for(int x =0;x<b.length;x++){
 				int v = b[x][y];
@@ -93,11 +89,20 @@ public class Ex3Algo implements PacManAlgo{
 			System.out.println(i+") status: "+g.getStatus()+",  type: "+g.getType()+",  pos: "+g.getPos(0)+",  time: "+g.remainTimeAsEatable(0));
 		}
 	}
-	private static int randomDir() {
-		int[] dirs = {Game.UP, Game.LEFT, Game.DOWN, Game.RIGHT};
-		int ind = (int)(Math.random()*dirs.length);
-		return dirs[ind];
-	}
+
+    private int randomDir(Index2D pacmanPos) {
+        int black = Game.getIntColor(Color.BLACK, 0);
+        int[] validDirs = new int[4];
+        int count = 0;
+        for (int dir : DIRECTIONS) {
+            if (isValidMove(getNextPosition(pacmanPos, dir), black)) {
+                validDirs[count++] = dir;
+            }
+        }
+        if (count == 0) return Game.STAY;
+        return validDirs[(int)(Math.random() * count)];
+    }
+
 
     private Index2D parsePosition(String pos) {
         String[] parts = pos.split(",");
@@ -105,14 +110,13 @@ public class Ex3Algo implements PacManAlgo{
         int y = Integer.parseInt(parts[1].trim());
         return new Index2D(x,y);
     }
-    // finds danger ghost do not eat, find closest danger ghost
+
+    // finds danger ghost do not eat, find the closest danger ghost
     private GhostCL findCloseDangerG (Index2D pacmanPos, GhostCL[] ghosts) {
         GhostCL closest = null;
-        double minDist = 4.0; // only if its 4 spaces close
-
+        double minDist = 2.0; // only if its 2 spaces close
         for(int i=0;i<ghosts.length;i++){
             GhostCL g = ghosts[i];
-
             if (g.remainTimeAsEatable(0)<= 0){
                 Index2D ghostPos = parsePosition(g.getPos(0));
                 double distance = pacmanPos.distance2D(ghostPos);
@@ -126,7 +130,7 @@ public class Ex3Algo implements PacManAlgo{
     }
 
     // checks all directions, check the distance between all ghosts, choose the direction with max dist
-    private int escapeFromGhost (Index2D pacmanPos, GhostCL dangerGhost) {
+    private int escapeFromGhost (Index2D pacmanPos, GhostCL dangerGhost, int blackColour) {
         Index2D ghostPos = parsePosition(dangerGhost.getPos(0));
 
         int bestDir= Game.STAY;
@@ -134,11 +138,16 @@ public class Ex3Algo implements PacManAlgo{
         for(int i=0;i<DIRECTIONS.length;i++){
             int dir = DIRECTIONS[i];
             Index2D nextPos = getNextPosition(pacmanPos, dir);
+            if (isValidMove(nextPos,blackColour)){
             double distance = nextPos.distance2D(ghostPos);
             if (distance > maxDist) {
                 maxDist = distance;
                 bestDir = dir;
             }
+            }
+        }
+        if (bestDir == Game.STAY) {
+            return randomDir(pacmanPos);
         }
         return bestDir;
     }
@@ -160,11 +169,13 @@ public class Ex3Algo implements PacManAlgo{
             x= x+1;
         }
         return new Index2D(x,y);
+
     }
+
 
   private GhostCL findCloseEatG (Index2D pacmanPos, GhostCL[] ghosts) {
         GhostCL closest = null;
-        double minDist = 4.0;
+        double minDist = Double.MAX_VALUE;
         for(int i=0;i<ghosts.length;i++){
             GhostCL g = ghosts[i];
             double eatableTime = g.remainTimeAsEatable(0);
@@ -183,21 +194,94 @@ public class Ex3Algo implements PacManAlgo{
 private int chaseGhost (Index2D pacmanPos, GhostCL eatableGhost) {
         Index2D ghostPos = parsePosition(eatableGhost.getPos(0));
         int bestDir= Game.STAY;
-        double minDist = 4.0;
+        double minDist = Double.MAX_VALUE;
+    int black = Game.getIntColor(Color.BLACK, 0);
         for(int i=0;i<DIRECTIONS.length;i++){
             int dir = DIRECTIONS[i];
             Index2D nextPos = getNextPosition(pacmanPos, dir);
+            if (!isValidMove(nextPos, black)) continue;
             double distance = nextPos.distance2D(ghostPos);
             if (distance < minDist) {
                 minDist = distance;
                 bestDir = dir;
             }
         }
+    if (bestDir == Game.STAY) {
+        return randomDir(pacmanPos);
+    }
         return bestDir;
+}
 
+private Index2D findNearPowerUP (Index2D pacmanPos, int[][] board) {
+        int greenColour = Game.getIntColor(Color.GREEN,0);
+        Index2D nearest = null;
+        double minDist = Double.MAX_VALUE;
+        for(int x=0;x<board.length;x++){
+            for(int y=0;y<board[0].length;y++){
+                if (board[x][y]== greenColour) {
+                    Index2D powerPos = new Index2D (x,y);
+                    double distance = pacmanPos.distance2D(powerPos);
+                    if (distance < minDist) {
+                        minDist = distance;
+                        nearest = powerPos;
+                    }
+                }
+            }
+        }
+    return nearest;
 
+    }
+
+private int moveTowardTarget (Index2D pacmanPos, Index2D target) {
+        int bestDir= Game.STAY;
+        double minDist = Double.MAX_VALUE;
+    int black = Game.getIntColor(Color.BLACK, 0);
+        for(int i=0;i<DIRECTIONS.length;i++){
+            int dir = DIRECTIONS[i];
+            Index2D nextPos = getNextPosition(pacmanPos, dir);
+            System.out.println("Trying dir " + dir + " -> " + nextPos);
+            if (!isValidMove(nextPos, black)) continue;
+            double distance = nextPos.distance2D(target);
+            if (distance < minDist) {
+                minDist = distance;
+                bestDir = dir;
+            }
+        }
+    if (bestDir == Game.STAY) {
+        return randomDir(pacmanPos);
+    }
+        return bestDir;
 }
 
 
+
+private Index2D findNearFood  (Index2D pacmanPos, int[][] board) {
+        int pinkColour = Game.getIntColor(Color.PINK,0);
+        Index2D nearest = null;
+        double minDist = Double.MAX_VALUE;
+        for (int x=0;x<board.length;x++){
+            for (int y=0;y<board[0].length;y++){
+                if (board[x][y]== pinkColour) {
+                    Index2D foodPos = new Index2D (x,y);
+                    double distance = pacmanPos.distance2D(foodPos);
+                    if (distance < minDist) {
+                        minDist = distance;
+                        nearest = foodPos;
+                    }
+                }
+            }
+        }
+        return nearest;
+
+}
+    private boolean isValidMove(Index2D pos, int blackColour) {
+        if (!_map.isInside(pos)) {
+            return false;
+        }
+        if (_map.getPixel(pos) == blackColour) {
+            return false;
+        }
+        return true;
+    }
 
 }

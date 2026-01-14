@@ -12,13 +12,12 @@ public class Index2D implements Pixel2D {
         return _y;
     }
     public double distance2D(Pixel2D t) {
-        double dx = _x- t.getX();
-        double dy = _y- t.getY();
-        if (t==null) {
+        if (t == null) {
             throw new RuntimeException("p2 is null");
         }
+        double dx = _x - t.getX();
+        double dy = _y - t.getY();
         double d = (dx * dx + dy * dy);
-
         return Math.sqrt(d);
     }
     @Override

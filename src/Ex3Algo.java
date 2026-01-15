@@ -52,15 +52,34 @@ public class Ex3Algo implements PacManAlgo {
             printGhosts(ghosts);
             int up = Game.UP, left = Game.LEFT, down = Game.DOWN, right = Game.RIGHT;
         }
+        GhostCL[] ghosts = game.getGhosts(code);
         _count++;
 
 
 
+        GhostCL danger = findNearDangerGhost(pacmanPos, ghosts, 7.0);
+        if (danger != null) {
+            Index2D emergencyPower = findNearPowerUP(pacmanPos, map, blue, green);
+            if (emergencyPower != null && pacmanPos.distance2D(emergencyPower) < 5.0) {
+                System.out.println("EMERGENCY: Going for PowerUP to survive!");
+                return moveTowardTarget(pacmanPos, emergencyPower, map, blue);
+            }
+            return escapeDir(pacmanPos, danger, map, blue);
+        }
+
+        GhostCL edibleGhost = findNearestEdibleGhost(pacmanPos, ghosts, 20.0);
+        if (edibleGhost != null) {
+            return chaseEdibleGhost(pacmanPos, edibleGhost, map, blue);
+        }
 
         Index2D power =findNearPowerUP (pacmanPos, map, blue, green);
         if (power != null){
-            return moveTowardTarget (pacmanPos,power,map,blue);
-        }
+                double distToPower = pacmanPos.distance2D(power);
+                GhostCL approachingGhost = findNearDangerGhost(pacmanPos, ghosts, 15.0);
+                if (approachingGhost != null || distToPower < 3.0) {
+                    return moveTowardTarget(pacmanPos, power, map, blue);
+                }
+            }
 
         Index2D food = findNearFood(pacmanPos, map, blue, pink);
         if (food != null) {
@@ -71,6 +90,127 @@ public class Ex3Algo implements PacManAlgo {
         return dir;
     }
 
+    private int chaseEdibleGhost(Index2D pacmanPos, GhostCL edibleGhost, Map2D map, int blue) {
+            Index2D ghostPos = parsePosition(edibleGhost.getPos(0));
+
+            System.out.println("Chasing edible ghost at: " + ghostPos.getX() + "," + ghostPos.getY()
+                    + " (time left: " + edibleGhost.remainTimeAsEatable(0) + ")");
+
+            return moveTowardTarget(pacmanPos, ghostPos, map, blue);
+        }
+
+
+    // Add this function to find the nearest edible ghost
+    private GhostCL findNearestEdibleGhost(Index2D pos, GhostCL[] ghosts, double maxDistance) {
+        GhostCL nearest = null;
+        double minDist = maxDistance;
+        for (int i = 0; i < ghosts.length; i++) {
+            GhostCL ghost = ghosts[i];
+            if (ghost.remainTimeAsEatable(0) > 0) {
+                Index2D ghostPos = parsePosition(ghost.getPos(0));
+
+                int gx = ghostPos.getX();
+                int gy = ghostPos.getY();
+                if (gx >= 10 && gx <= 15 && gy >= 10 && gy <= 15) {
+                    continue;
+                }
+                double dist = pos.distance2D(ghostPos);
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearest = ghost;
+                }
+            }
+        }
+
+        return nearest;
+    }
+
+    private int escapeDir(Index2D pacmanPos, GhostCL dangerG, Map2D map, int blue) {
+        Index2D ghostPos = parsePosition(dangerG.getPos(0));
+
+        // Find the safest point that's FAR from the ghost using allDistance
+        Map2D distFromGhost = map.allDistance(ghostPos, blue);
+
+        // Find the farthest reachable point
+        Index2D safePoint = null;
+        int maxDist = 0;
+
+        for (int x = 0; x < map.getWidth(); x++) {
+            for (int y = 0; y < map.getHeight(); y++) {
+                int d = distFromGhost.getPixel(x, y);
+                if (d > maxDist && d < 1000) { // 1000+ means unreachable/wall
+                    maxDist = d;
+                    safePoint = new Index2D(x, y);
+                }
+            }
+        }
+
+        // Path to the safest point
+        if (safePoint != null) {
+            Pixel2D[] path = map.shortestPath(pacmanPos, safePoint, blue);
+            if (path != null && path.length > 1) {
+                System.out.println("Escaping toward safe point: " + safePoint.getX() + "," + safePoint.getY());
+                return computeDir(pacmanPos, path[1], map.getHeight(), map.getWidth());
+            }
+        }
+
+        // Fallback: just move away
+        int[] dirs = {Game.UP, Game.DOWN, Game.LEFT, Game.RIGHT};
+        int bestDir = -1;
+        double maxDist2 = -1;
+
+        for (int dir : dirs) {
+            Index2D nextPos = getNextPosition(pacmanPos, dir, map.getWidth(), map.getHeight());
+            if (map.getPixel(nextPos.getX(), nextPos.getY()) == blue) {
+                double dist = nextPos.distance2D(ghostPos);
+                if (dist > maxDist2) {
+                    maxDist2 = dist;
+                    bestDir = dir;
+                }
+            }
+        }
+
+        return bestDir != -1 ? bestDir : randomDir();
+    }
+
+    private Index2D getNextPosition(Index2D p, int dir, int w, int h) {
+            int x = p.getX();
+            int y = p.getY();
+            if (dir == Game.UP) y++;
+            if (dir == Game.DOWN) y--;
+            if (dir == Game.LEFT) x++;
+            if (dir == Game.RIGHT) x--;
+
+            if (x < 0)
+                x = w - 1;
+            if (x >= w)
+                x = 0;
+            if (y < 0)
+                y = h - 1;
+            if (y >= h)
+                y = 0;
+            return new Index2D(x, y);
+        }
+
+    private GhostCL findNearDangerGhost(Index2D pos, GhostCL[] ghosts, double distance) {
+        for (GhostCL g: ghosts) {
+            if (g.remainTimeAsEatable(0)<=0){
+                Index2D gPos= parsePosition(g.getPos(0));
+
+                if (gPos.getX() >= 10 && gPos.getX() <= 15 && gPos.getY() >= 10 && gPos.getY() <= 12) {
+                    continue;
+                }
+
+                if (pos.distance2D(gPos)<distance) {
+                    return g;
+                }
+            }
+        }
+        return null;
+    }
+
+
+
     private Index2D findNearPowerUP(Index2D pos, Map2D map, int blue, int green) {
         Map2D mapDist = map.allDistance(pos, blue);
         Index2D powerUp = null;
@@ -80,11 +220,11 @@ public class Ex3Algo implements PacManAlgo {
                 if (map.getPixel(x,y)== green){
                     //if (x != pos.getX() && y != pos.getY()) {
                         int d = mapDist.getPixel(x, y);
-                       // if (d != -1 || d < minDist) {
+                        if (d != -1 || d < minDist) {
                             minDist = d;
                             powerUp = new Index2D(x, y);
                       //  }
-                   // }
+                    }
                 }
             }
         }
@@ -101,31 +241,16 @@ public class Ex3Algo implements PacManAlgo {
                 if (map.getPixel(x, y) == pink) {
                     //  if (x != pos.getX() && y != pos.getY()) {}
                         int d = mapDist.getPixel(x, y);
-                      //  if (d != -1 || d < minDist) {
+                        if (d != -1 || d < minDist) {
                             minDist = d;
                             food = new Index2D(x, y);
 
-                   // }
+                   }
                 }
             }
         }
         return food;
     }
-
-
-   /* private static int moveTowardTarget(Index2D pacmanPos, Index2D target, Map2D map, int blue) {
-        Pixel2D[] path = map.shortestPath(pacmanPos, target, blue);
-        if (path != null && path.length >= 2) {
-            Pixel2D nextStep = path[1];
-            return computeDir(pacmanPos, nextStep, map.getHeight(), map.getWidth());
-        }
-        return randomDir();
-    }
-
-    */
-
-
-
 
     private static int moveTowardTarget(Index2D pacmanPos, Index2D target, Map2D map, int blue) {
         Pixel2D[] path = map.shortestPath(pacmanPos, target, blue);

@@ -33,7 +33,7 @@ public class  Ex3Main {
             _cmd = ex3.getKeyChar();
             if(_cmd !=null && _cmd == ' ') {ex3.play();}
             if (_cmd != null && _cmd == 'h') {
-            	System.out.println("Pacman help: keys: ' '-start, 'w,a,x,d'-directions, all other parameters should be configured via GameInfo.java, ");
+            	System.out.println("Pacman help: keys: ' '-start, 'w,a,z,d'-directions, all other parameters should be configured via GameInfo.java, ");
             }
             int  dir = man.move(ex3);
             ex3.move(dir);

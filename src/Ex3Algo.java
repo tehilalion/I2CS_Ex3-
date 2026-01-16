@@ -94,7 +94,7 @@ public class Ex3Algo implements PacManAlgo {
             Index2D ghostPos = parsePosition(edibleGhost.getPos(0));
 
             System.out.println("Chasing edible ghost at: " + ghostPos.getX() + "," + ghostPos.getY()
-                    + " (time left: " + edibleGhost.remainTimeAsEatable(0) + ")");
+                    + " (time left: " + edibleGhost.remainTimeAsEatable(2) + ")");
 
             return moveTowardTarget(pacmanPos, ghostPos, map, blue);
         }
@@ -106,7 +106,7 @@ public class Ex3Algo implements PacManAlgo {
         double minDist = maxDistance;
         for (int i = 0; i < ghosts.length; i++) {
             GhostCL ghost = ghosts[i];
-            if (ghost.remainTimeAsEatable(0) > 0) {
+            if (ghost.remainTimeAsEatable(2) > 0) {
                 Index2D ghostPos = parsePosition(ghost.getPos(0));
 
                 int gx = ghostPos.getX();

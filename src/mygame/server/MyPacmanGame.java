@@ -2,9 +2,10 @@ package mygame.server;
 
 import exe.ex3.game.*;
 
-public class MyPacmanGame implements PacmanGame {
+public class MyPacmanGame //implements PacmanGame
+{
 
-    private int status = INIT;
+  /*  private int status = INIT;
     private boolean cyclic;
     private int px = 1, py = 1;   // Pac-Man position
     private int[][] board;
@@ -91,4 +92,8 @@ public class MyPacmanGame implements PacmanGame {
     public Character getKeyChar() {
         return null;
     }
+
+
+   */
+
 }

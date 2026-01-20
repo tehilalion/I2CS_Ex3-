@@ -161,7 +161,7 @@ public class Ex3Algo implements PacManAlgo {
 
         for (int dir : dirs) {
             Index2D nextPos = getNextPosition(pacmanPos, dir, map.getWidth(), map.getHeight());
-            if (map.getPixel(nextPos.getX(), nextPos.getY()) == blue) {
+            if (map.getPixel(nextPos.getX(), nextPos.getY()) !=blue) {
                 double dist = nextPos.distance2D(ghostPos);
                 if (dist > maxDist2) {
                     maxDist2 = dist;
@@ -178,8 +178,8 @@ public class Ex3Algo implements PacManAlgo {
             int y = p.getY();
             if (dir == Game.UP) y++;
             if (dir == Game.DOWN) y--;
-            if (dir == Game.LEFT) x++;
-            if (dir == Game.RIGHT) x--;
+            if (dir == Game.RIGHT) x++;
+            if (dir == Game.LEFT) x--;
 
             if (x < 0)
                 x = w - 1;
@@ -218,12 +218,10 @@ public class Ex3Algo implements PacManAlgo {
         for (int x=0; x< map.getWidth(); x++){
             for (int y=0; y< map.getHeight(); y++){
                 if (map.getPixel(x,y)== green){
-                    //if (x != pos.getX() && y != pos.getY()) {
                         int d = mapDist.getPixel(x, y);
-                        if (d != -1 || d < minDist) {
+                        if (d != -1 && d < minDist) {
                             minDist = d;
                             powerUp = new Index2D(x, y);
-                      //  }
                     }
                 }
             }
@@ -239,9 +237,8 @@ public class Ex3Algo implements PacManAlgo {
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
                 if (map.getPixel(x, y) == pink) {
-                    //  if (x != pos.getX() && y != pos.getY()) {}
                         int d = mapDist.getPixel(x, y);
-                        if (d != -1 || d < minDist) {
+                        if (d != -1 && d < minDist) {
                             minDist = d;
                             food = new Index2D(x, y);
 

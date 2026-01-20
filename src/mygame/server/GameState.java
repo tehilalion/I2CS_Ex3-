@@ -1,7 +1,7 @@
 package mygame.server;
 
 public class GameState {
-    private GameBoard board;
+   /* private GameBoard board;
     private PacMan pacman;
     private Ghost[] ghosts;
     private int score;
@@ -40,4 +40,6 @@ public class GameState {
     public int getScore() {
         return score;
     }
+
+    */
 }

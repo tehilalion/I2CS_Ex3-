@@ -1,10 +1,10 @@
 package mygame.server;
 
 public class PacMan {
-    private int x;
-    private int y;
+  //  private int x;
+    // private int y;
 
-    public PacMan(int startX, int startY) {
+   /* public PacMan(int startX, int startY) {
         this.x = startX;
         this.y = startY;
     }
@@ -32,4 +32,8 @@ public class PacMan {
 
     public int getX() { return x; }
     public int getY() { return y; }
+
+    */
 }
+
+

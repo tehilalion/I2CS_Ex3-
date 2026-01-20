@@ -13,7 +13,7 @@ import exe.ex3.game.PacmanGame;
  * 2. 'c' changes the cyclic mode (default is true).
  * 3. In manual mode: 'w'-up, 'a'-left, 'x'-down, 'd'-right.
  * 4. The Game (and the Gamer) parameters are defined in the Info class.
- * 4. Your are asked to implement the following classes: Index2D, Map, Ex3Algo.
+ * 4. You are asked to implement the following classes: Index2D, Map, Ex3Algo.
  * 5. Keep in mind that in order to implement this assignment - you might want to implement few additional classes (on top of adding JUnit classes).
  * 6. The game has 5 main "levels" ([0,4]). You are request to run&test them all.
  * 7. After each run, the system prints (in the terminal, in red) a String with your game results -

@@ -60,26 +60,31 @@ public class Ex3Algo implements PacManAlgo {
         GhostCL danger = findNearDangerGhost(pacmanPos, ghosts, 7.0);
         if (danger != null) {
             Index2D emergencyPower = findNearPowerUP(pacmanPos, map, blue, green);
-            if (emergencyPower != null && pacmanPos.distance2D(emergencyPower) < 5.0) {
-                System.out.println("EMERGENCY: Going for PowerUP to survive!");
-                return moveTowardTarget(pacmanPos, emergencyPower, map, blue);
+            if (emergencyPower != null) {
+                int d = bfsDistance(pacmanPos, emergencyPower, map, blue);
+                if (d != -1 && d <= 5) {
+                    System.out.println("EMERGENCY: Going for PowerUP to survive!");
+                    return moveTowardTarget(pacmanPos, emergencyPower, map, blue);
+                }
             }
             return escapeDir(pacmanPos, danger, map, blue);
         }
 
-        GhostCL edibleGhost = findNearestEdibleGhost(pacmanPos, ghosts, 20.0);
+        GhostCL edibleGhost = findNearestEdibleGhost(pacmanPos, ghosts, map, blue, 20.0);
         if (edibleGhost != null) {
             return chaseEdibleGhost(pacmanPos, edibleGhost, map, blue);
         }
 
-        Index2D power =findNearPowerUP (pacmanPos, map, blue, green);
-        if (power != null){
-                double distToPower = pacmanPos.distance2D(power);
-                GhostCL approachingGhost = findNearDangerGhost(pacmanPos, ghosts, 15.0);
-                if (approachingGhost != null || distToPower < 3.0) {
-                    return moveTowardTarget(pacmanPos, power, map, blue);
-                }
+        Index2D power = findNearPowerUP(pacmanPos, map, blue, green);
+        if (power != null) {
+            GhostCL approachingGhost = findNearDangerGhost(pacmanPos, ghosts, 15.0);
+
+            int distToPower = bfsDistance(pacmanPos, power, map, blue); // BFS distance
+            if (distToPower != -1 && (approachingGhost != null || distToPower <= 3)) {
+                return moveTowardTarget(pacmanPos, power, map, blue);
             }
+        }
+
 
         Index2D food = findNearFood(pacmanPos, map, blue, pink);
         if (food != null) {
@@ -99,39 +104,48 @@ public class Ex3Algo implements PacManAlgo {
             return moveTowardTarget(pacmanPos, ghostPos, map, blue);
         }
 
+    private int bfsDistance(Index2D from, Index2D to, Map2D map, int blue) {
+        Map2D dist = map.allDistance(from, blue);
+        return dist.getPixel(to.getX(), to.getY());
+    }
 
-    // Add this function to find the nearest edible ghost
-    private GhostCL findNearestEdibleGhost(Index2D pos, GhostCL[] ghosts, double maxDistance) {
-        GhostCL nearest = null;
-        double minDist = maxDistance;
-        for (int i = 0; i < ghosts.length; i++) {
-            GhostCL ghost = ghosts[i];
-            if (ghost.remainTimeAsEatable(2) > 0) {
-                Index2D ghostPos = parsePosition(ghost.getPos(0));
+    private boolean inGhostHouse(Index2D p) {
+        int x = p.getX(), y = p.getY();
+        return (x >= 10 && x <= 15 && y >= 10 && y <= 15);
+    }
 
-                int gx = ghostPos.getX();
-                int gy = ghostPos.getY();
-                if (gx >= 10 && gx <= 15 && gy >= 10 && gy <= 15) {
-                    continue;
-                }
-                double dist = pos.distance2D(ghostPos);
-                if (dist < minDist) {
-                    minDist = dist;
-                    nearest = ghost;
-                }
+    private GhostCL findNearestEdibleGhost(Index2D pos, GhostCL[] ghosts, Map2D map, int blue, double maxDistance) {
+        GhostCL best = null;
+        double bestDist = maxDistance;
+
+        for (GhostCL ghost : ghosts) {
+            double t = ghost.remainTimeAsEatable(2);
+            if (t <= 0) continue;
+
+            Index2D gPos = parsePosition(ghost.getPos(0));
+            if (inGhostHouse(gPos)) continue;
+
+            int d = bfsDistance(pos, gPos, map, blue);
+            if (d == -1) continue;
+
+            int stepsLeft = (int)Math.floor(t);
+
+
+            if (d <= stepsLeft && d < bestDist) {
+                bestDist = d;
+                best = ghost;
             }
         }
 
-        return nearest;
+        return best;
     }
+
 
     private int escapeDir(Index2D pacmanPos, GhostCL dangerG, Map2D map, int blue) {
         Index2D ghostPos = parsePosition(dangerG.getPos(0));
 
-        // Find the safest point that's FAR from the ghost using allDistance
         Map2D distFromGhost = map.allDistance(ghostPos, blue);
 
-        // Find the farthest reachable point
         Index2D safePoint = null;
         int maxDist = 0;
 
@@ -145,7 +159,6 @@ public class Ex3Algo implements PacManAlgo {
             }
         }
 
-        // Path to the safest point
         if (safePoint != null) {
             Pixel2D[] path = map.shortestPath(pacmanPos, safePoint, blue);
             if (path != null && path.length > 1) {
@@ -154,7 +167,6 @@ public class Ex3Algo implements PacManAlgo {
             }
         }
 
-        // Fallback: just move away
         int[] dirs = {Game.UP, Game.DOWN, Game.LEFT, Game.RIGHT};
         int bestDir = -1;
         double maxDist2 = -1;
@@ -192,21 +204,28 @@ public class Ex3Algo implements PacManAlgo {
             return new Index2D(x, y);
         }
 
-    private GhostCL findNearDangerGhost(Index2D pos, GhostCL[] ghosts, double distance) {
-        for (GhostCL g: ghosts) {
-            if (g.remainTimeAsEatable(0)<=0){
-                Index2D gPos= parsePosition(g.getPos(0));
 
-                if (gPos.getX() >= 10 && gPos.getX() <= 15 && gPos.getY() >= 10 && gPos.getY() <= 12) {
+    private GhostCL findNearDangerGhost(Index2D pos, GhostCL[] ghosts, double maxDistance) {
+        GhostCL nearest = null;
+        double minDist = maxDistance;
+
+        for (GhostCL g : ghosts) {
+            if (g.remainTimeAsEatable(0) <= 0) { // not edible
+                Index2D gPos = parsePosition(g.getPos(0));
+
+                if (inGhostHouse(gPos)) {
                     continue;
                 }
 
-                if (pos.distance2D(gPos)<distance) {
-                    return g;
+
+                double d = pos.distance2D(gPos);
+                if (d < minDist) {
+                    minDist = d;
+                    nearest = g;
                 }
             }
         }
-        return null;
+        return nearest;
     }
 
 
@@ -251,10 +270,9 @@ public class Ex3Algo implements PacManAlgo {
 
     private static int moveTowardTarget(Index2D pacmanPos, Index2D target, Map2D map, int blue) {
         Pixel2D[] path = map.shortestPath(pacmanPos, target, blue);
-        if (path != null) {
+        if (path != null && path.length > 1) {
             Pixel2D p = path[1];
-            int dir = computeDir(pacmanPos, p,map.getHeight(), map.getWidth());
-            return dir;
+            return computeDir(pacmanPos, p, map.getHeight(), map.getWidth());
         }
         return randomDir();
     }
@@ -309,7 +327,9 @@ public class Ex3Algo implements PacManAlgo {
         return dirs[ind];
     }
 
+
     private Index2D parsePosition(String pos) {
+        pos = pos.replaceAll("[^0-9,\\-]", "");
         String[] parts = pos.split(",");
         int x = Integer.parseInt(parts[0].trim());
         int y = Integer.parseInt(parts[1].trim());

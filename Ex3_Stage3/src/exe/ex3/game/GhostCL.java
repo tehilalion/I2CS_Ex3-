@@ -3,7 +3,7 @@ package exe.ex3.game;
 public class GhostCL {
     private int x, y;
     private int edibleTicks;
-    private int type;
+    private final int type;
 
     public GhostCL(int type, int x, int y) {
         this.type = type;
@@ -14,16 +14,11 @@ public class GhostCL {
 
     public int getType() { return type; }
 
-    public int getStatus() { return edibleTicks > 0 ? 1 : 0; }
-
-    public String getPos(int code) { return x + "," + y; }
-
     public double remainTimeAsEatable(int code) { return edibleTicks; }
 
-    // helpers for your server
     public void setPos(int x, int y) { this.x = x; this.y = y; }
 
-    public void makeEdible(int ticks) { edibleTicks = ticks; }
+    public void makeEdible(int ticks) { edibleTicks = Math.max(0, ticks); }
 
     public void tick() { if (edibleTicks > 0) edibleTicks--; }
 

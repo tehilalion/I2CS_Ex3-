@@ -35,7 +35,7 @@ public class GuiRunner {
         int w = b.length;
         int h = b[0].length;
 
-        StdDraw.clear(StdDraw.WHITE);
+        StdDraw.clear(StdDraw.BLACK);
 
         // tile codes: 0 empty, 1 wall, 2 food, 3 power
         for (int x = 0; x < w; x++) {
